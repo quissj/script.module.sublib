@@ -108,9 +108,7 @@ class service(object):
                                     self.item.episode
                                     )
             if not sub:
-                d = xbmcgui.Dialog()
-                d.ok("Error in archive", "Archive file %s is either empty or the files are not in the root directory." % fname)
-                sys.exit()
+                return
             listitem = xbmcgui.ListItem(label=sub)
             xbmcplugin.addDirectoryItem(
                                         handle=int(sys.argv[1]),
@@ -125,8 +123,6 @@ class service(object):
         self.addsub(sub)
 
     def download(self, *args, **kwargs):
-        print args
-        print kwargs
         self.addfile("/path/to/file")
 
     def num(self, issub=True):

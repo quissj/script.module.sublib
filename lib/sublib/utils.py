@@ -28,6 +28,7 @@ import urllib2
 import cookielib
 import unicodedata
 import HTMLParser
+import os
 
 _cj = cookielib.CookieJar()
 _opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
@@ -76,7 +77,7 @@ def download(u, query=None, data=None, referer=None, binary=False, ua=None,
     header = {"User-Agent": ua}
     if referer:
         header["Referer"] = referer
-    print u
+    # print u
     req = urllib2.Request(u, data, header)
     res = _opener.open(req)
     if not binary:
@@ -97,33 +98,45 @@ def checkarchive(fname):
 
 def selectfile(files, prefix="/"):
     if not len(files):
-        return None
+        return
     optlist = []
-    dirlist = []
+    dirindex = []
     optindex = -1
-    filedict = {}
+    if not prefix == "/":
+        optlist.append("..")
+        optindex += 1
     for f in files:
-        if f.startswith(prefix):
-            if not prefix == "/":
-                optlist.append[".."]
-                dirlist.append(optindex + 1)
-            paths = f.split("/")
-            if f.endswith("/"):
-                optlist.append("[%s]", paths[-2])
-                dirlist.append(optindex + 1)
+        if f.endswith("/"):
+            fpath, fname = os.path.split(f[:-1])
+            fname = None
+        else:
+            fpath, fname = os.path.split(f)
+        if not fpath == "/":
+            fpath += "/"
+        if fpath == prefix:
+            if fname:
+                optlist.append(fname)
+                optindex += 1
             else:
-                optlist.append(paths[-1])
-                filedict[optindex + 1] = f
+                optlist.append("[%s]" % f.split("/")[-2])
+                optindex += 1
+                dirindex.append(optindex)
     dialog = xbmcgui.Dialog()
     index = dialog.select(xbmc.getLocalizedString(13250), optlist)
+    if index < 0:
+        # canceled
+        return
     if index == 0 and not prefix == "/":
-        prefix = "/".join(prefix.split("/")[:-2])+"/"
-        selectfile(files, prefix)
-    if index in dirlist:
-        prefix += optlist[index] + "/"
-        selectfile(files, prefix)
+        # parent directory
+        prefix = "/".join(prefix.split("/")[:-2]) + "/"
+        return selectfile(files, prefix)
+    if index in dirindex:
+        # sub-folder
+        prefix += optlist[index][1:-1] + "/"
+        return selectfile(files, prefix)
     else:
-        return filedict[index]
+        # single file
+        return prefix + optlist[index]
 
 
 def getlof(ar, fname, path="", lof=[]):
@@ -131,16 +144,15 @@ def getlof(ar, fname, path="", lof=[]):
     for d in ds:
         dpath = path + "/" + d
         lof.append(dpath + "/")
-        lof.extend(getlof(dpath), path, lof)
+        getlof(ar, fname, dpath, lof)
     for f in fs:
         lof.append(path + "/" + f)
     return lof
 
 
 def findshow(season, episode, fname):
-    fname = fname.split("/")[-1]
-    matchstr = fname.lower().replace(" ", "")
-    print matchstr
+    matchstr = fname[1:].split("/")[-1]
+    matchstr = matchstr.lower().replace(" ", "")
     if not episode == -1:
         for reg in epiregs:
             m = re.search(reg, matchstr)
@@ -149,15 +161,13 @@ def findshow(season, episode, fname):
                     m.group(2).isdigit() and \
                     int(m.group(1)) == season and \
                     int(m.group(2)) == episode:
-                print 7777
-                print m.lastindex
-                print m.group(1)
-                print "!!!!!!matched %s:%s" % (matchstr, reg)
+                # print "!!!!!!matched %s:%s" % (matchstr, reg)
                 return fname
             if m and m.lastindex == 1 and\
                     m.group(1).isdigit() and \
-                    int(m.group(1)) == episode:
-                print "!!!!!!matched %s:%s" % (matchstr, reg)
+                    int(m.group(1)) == episode and \
+                    season < 0:
+                # print "++++++matched %s:%s" % (matchstr, reg)
                 return fname
 
 
@@ -165,7 +175,6 @@ def getar(fname, ar, show, season, episode):
     if fname.endswith("/"):
         fname = fname[:-1]
     lof = getlof(ar, fname)
-    # archive with lots of file
     if show:
         found = []
         for f in lof:
@@ -174,12 +183,12 @@ def getar(fname, ar, show, season, episode):
             fname = findshow(season, episode, f)
             if fname:
                 found.append(fname)
-        if len(found) == 1:
-            return found[0]
-        else:
+        if len(found):
             lof = found
-    f = selectfile(lof)
-    return f
+    if len(lof) == 1:
+        return lof[0]
+    else:
+        return selectfile(lof)
 
 
 def getsub(fname, show, season, episode):
@@ -188,9 +197,9 @@ def getsub(fname, show, season, episode):
         arname = getar(fname, isar, show, season, episode)
         if not arname:
             return
-        uri = "%s://[%s]/%s" % (isar, fname, arname)
-        # fix for rar filesystem crashes sometimes
-        fname = fname + "_" + arname
+        uri = "%s://[%s]%s" % (isar, fname, arname)
+        # fix for rar file system crashes sometimes if archive:// is returned
+        fname = fname + arname.replace("/", "_")
         f = xbmcvfs.File(uri)
         with open(fname, "w") as out:
             out.write(f.read())

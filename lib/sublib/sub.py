@@ -49,6 +49,10 @@ class model(object):
     def kwargs(self):
         return self.__kwargs
 
+    @property
+    def priority(self):
+        return self.__priority
+
     @label.setter
     def label(self, val):
         if not isinstance(val, (str, unicode)):
@@ -81,13 +85,20 @@ class model(object):
             raise(ValueError(val))
         self.__rating = val
 
-    def __init__(self, label, iso, rating=0, sync=False, cc=False):
+    @priority.setter
+    def priority(self, val):
+        if not isinstance(val, int):
+            raise(TypeError(type(val)))
+        self.__priority = val
+
+    def __init__(self, label, iso, rating=0, sync=False, cc=False, priority=0):
         self.__label = None
         self.__iso = None
         self.rating = rating
         self.label = label
         self.iso = iso
         self.sync = sync
+        self.priority = priority
         self.cc = cc
         self.__args = []
         self.__kwargs = {}
