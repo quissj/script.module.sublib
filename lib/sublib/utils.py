@@ -20,6 +20,8 @@
 
 import xbmcvfs
 import xbmcgui
+import xbmc
+
 import re
 import urllib
 import urllib2
@@ -113,7 +115,7 @@ def selectfile(files, prefix="/"):
                 optlist.append(paths[-1])
                 filedict[optindex + 1] = f
     dialog = xbmcgui.Dialog()
-    index = dialog.select('Choose Subtitle', optlist)
+    index = dialog.select(xbmc.getLocalizedString(13250), optlist)
     if index == 0 and not prefix == "/":
         prefix = "/".join(prefix.split("/")[:-2])+"/"
         selectfile(files, prefix)
