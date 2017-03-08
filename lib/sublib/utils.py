@@ -93,62 +93,90 @@ def checkarchive(fname):
         return "zip"
 
 
-def selectfile(files):
+def selectfile(files, prefix="/"):
+    if not len(files):
+        return None
+    optlist = []
+    dirlist = []
+    optindex = -1
+    filedict = {}
+    for f in files:
+        if f.startswith(prefix):
+            if not prefix == "/":
+                optlist.append[".."]
+                dirlist.append(optindex + 1)
+            paths = f.split("/")
+            if f.endswith("/"):
+                optlist.append("[%s]", paths[-2])
+                dirlist.append(optindex + 1)
+            else:
+                optlist.append(paths[-1])
+                filedict[optindex + 1] = f
     dialog = xbmcgui.Dialog()
-    index = dialog.select('Choose Subtitle', files)
-    return files[index]
+    index = dialog.select('Choose Subtitle', optlist)
+    if index == 0 and not prefix == "/":
+        prefix = "/".join(prefix.split("/")[:-2])+"/"
+        selectfile(files, prefix)
+    if index in dirlist:
+        prefix += optlist[index] + "/"
+        selectfile(files, prefix)
+    else:
+        return filedict[index]
+
+
+def getlof(ar, fname, path="", lof=[]):
+    ds, fs = xbmcvfs.listdir("%s://[%s]%s" % (ar, fname, path))
+    for d in ds:
+        dpath = path + "/" + d
+        lof.append(dpath + "/")
+        lof.extend(getlof(dpath), path, lof)
+    for f in fs:
+        lof.append(path + "/" + f)
+    return lof
+
+
+def findshow(season, episode, fname):
+    fname = fname.split("/")[-1]
+    matchstr = fname.lower().replace(" ", "")
+    print matchstr
+    if not episode == -1:
+        for reg in epiregs:
+            m = re.search(reg, matchstr)
+            if m and m.lastindex == 2 and\
+                    m.group(1).isdigit() and \
+                    m.group(2).isdigit() and \
+                    int(m.group(1)) == season and \
+                    int(m.group(2)) == episode:
+                print 7777
+                print m.lastindex
+                print m.group(1)
+                print "!!!!!!matched %s:%s" % (matchstr, reg)
+                return fname
+            if m and m.lastindex == 1 and\
+                    m.group(1).isdigit() and \
+                    int(m.group(1)) == episode:
+                print "!!!!!!matched %s:%s" % (matchstr, reg)
+                return fname
 
 
 def getar(fname, ar, show, season, episode):
     if fname.endswith("/"):
         fname = fname[:-1]
-    ds, fs = xbmcvfs.listdir(fname)
-    if not len(fs):
-        # empty archive
-        return
-    elif len(fs) == 1:
-        # archive with 1 file
-        f = fs[0]
-    else:
-        # archive with lots of file
-        if show:
-            found = []
-            for f in fs:
-                matchstr = f.lower().replace(" ", "")
-                print matchstr
-                if not episode == -1:
-                    for reg in epiregs:
-                        m = re.search(reg, matchstr)
-                        if m and m.lastindex == 2 and\
-                                m.group(1).isdigit() and \
-                                m.group(2).isdigit() and \
-                                int(m.group(1)) == season and \
-                                int(m.group(2)) == episode:
-                            print 7777
-                            print m.lastindex
-                            print m.group(1)
-                            print "!!!!!!matched %s:%s" % (matchstr, reg)
-                            found.append(f)
-                            break
-                        if m and m.lastindex == 1 and\
-                                m.group(1).isdigit() and \
-                                int(m.group(1)) == episode:
-                            print "!!!!!!matched %s:%s" % (matchstr, reg)
-                            found.append(f)
-                            break
-
-            if not len(found):
-                print 22222222
-                found = fs
-            if len(found) == 1:
-                print 33333333
-                f = found[0]
-            else:
-                print 4444444444
-                f = selectfile(found)
-            print f
+    lof = getlof(ar, fname)
+    # archive with lots of file
+    if show:
+        found = []
+        for f in lof:
+            if f.endswith("/"):
+                continue
+            fname = findshow(season, episode, f)
+            if fname:
+                found.append(fname)
+        if len(found) == 1:
+            return found[0]
         else:
-            f = selectfile(fs)
+            lof = found
+    f = selectfile(lof)
     return f
 
 
@@ -160,7 +188,7 @@ def getsub(fname, show, season, episode):
             return
         uri = "%s://[%s]/%s" % (isar, fname, arname)
         # fix for rar filesystem crashes sometimes
-        fname = fname + "___unpack"
+        fname = fname + "_" + arname
         f = xbmcvfs.File(uri)
         with open(fname, "w") as out:
             out.write(f.read())

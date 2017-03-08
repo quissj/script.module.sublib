@@ -57,7 +57,7 @@ class model(object):
 
     @iso.setter
     def iso(self, val):
-        if val not in sublib.iso639.two:
+        if val not in sublib.iso639.one:
             raise(ValueError(val))
         self.__iso = val
 
