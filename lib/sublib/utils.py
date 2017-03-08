@@ -93,7 +93,7 @@ def checkarchive(fname):
         sign = f.read(4)
     if sign == "Rar!":
         return "rar"
-    elif sign == "":
+    elif sign == "\x50\x4B\x03\x04":
         return "zip"
 
 
