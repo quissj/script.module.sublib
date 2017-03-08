@@ -7,7 +7,7 @@
 	<extension point="xbmc.addon.metadata">
 		<platform>all</platform>
 		<summary lang="en">Subtitle Library to create subtitle addons easy and fast</summary>
-		<summary lang="tr">Altyazı eklentisi geliştirmek için sublib kütüphanesi</summary>
+		<summary lang="tr">AltyazÄ± eklentisi geliÅŸtirmek iÃ§in sublib kÃ¼tÃ¼phanesi</summary>
 		<description lang="en">Sublib Module</description>
 		<license>GNU General Public License, v2</license>
 		<forum>https://github.com/hbiyik/script.module.sublib/issues</forum>
