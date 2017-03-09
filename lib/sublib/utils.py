@@ -141,7 +141,8 @@ def selectfile(files, prefix="/"):
 
 
 def getlof(ar, fname, path="", lof=[]):
-    ds, fs = xbmcvfs.listdir("%s://[%s]%s" % (ar, fname, path))
+    ds, fs = xbmcvfs.listdir("%s://%s%s" % (ar, urllib.quote_plus(fname),
+                                            path))
     for d in ds:
         dpath = path + "/" + d
         lof.append(dpath + "/")
@@ -198,7 +199,7 @@ def getsub(fname, show, season, episode):
         arname = getar(fname, isar, show, season, episode)
         if not arname:
             return
-        uri = "%s://[%s]%s" % (isar, fname, arname)
+        uri = "%s://%s%s" % (isar, urllib.quote_plus(fname), arname)
         # fix for rar file system crashes sometimes if archive:// is returned
         fname = fname + arname.replace("/", "_")
         f = xbmcvfs.File(uri)
