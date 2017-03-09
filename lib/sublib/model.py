@@ -52,7 +52,7 @@ class service(object):
         self._profile = xbmc.translatePath(profile).decode("utf-8")
         temp = os.path.join(profile, 'temp')
         self.path = xbmc.translatePath(temp).decode("utf-8")
-        if xbmcvfs.exists(self.path):
+        if os.path.exists(self.path):
             shutil.rmtree(self.path)
         xbmcvfs.mkdirs(self.path)
         params = dict(urlparse.parse_qsl(sys.argv[2][1:]))
@@ -72,12 +72,14 @@ class service(object):
         langs = self._params['languages']
         self.item = sublib.item.model(preflang, langs)
         self.search()
+        sorter = sublib.sub.sorter(self.item.languages[0])
+        self._subs.sort(key=sorter.method, reverse=True)
         for sub in self._subs:
             listitem = xbmcgui.ListItem(
                         label=xbmc.convertLanguage(sub.iso, xbmc.ENGLISH_NAME),
                         label2=sub.label,
                         iconImage=str(sub.rating),
-                        thumbnailImage=sub.iso + ".gif"
+                        thumbnailImage=sub.iso
                         )
             listitem.setProperty("sync", '{0}'.format(sub.sync).lower())
             listitem.setProperty("hearing_imp", '{0}'.format(sub.cc).lower())

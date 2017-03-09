@@ -107,6 +107,9 @@ class model(object):
         self.__args = args
         self.__kwargs = kwargs
 
+    def _ispreffered(self, iso):
+        return int(self.__iso == iso)
+
     def __repr__(self):
         return repr({
                      "label": self.__label,
@@ -117,3 +120,11 @@ class model(object):
                      "args": self.__args,
                      "kwargs": self.__kwargs
                      })
+
+
+class sorter():
+    def __init__(self, piso):
+        self.piso = piso
+
+    def method(self, ob):
+        return int(ob.iso == self.piso), ob.priority

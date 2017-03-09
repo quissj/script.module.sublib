@@ -134,7 +134,13 @@ def selectfile(files, prefix="/"):
     if index in dirindex:
         # sub-folder
         prefix += optlist[index][1:-1] + "/"
-        return selectfile(files, prefix)
+        ret = selectfile(files, prefix)
+        if ret < 0:
+            nprefix = os.path.split(prefix[:-1])[0] + "/"
+            nprefix = nprefix.replace("//", "/")
+            return selectfile(files, nprefix)
+        else:
+            return ret
     else:
         # single file
         return prefix + optlist[index]
@@ -153,7 +159,7 @@ def getlof(ar, fname, path="", lof=[]):
 
 
 def findshow(season, episode, fname):
-    matchstr = fname[1:].split("/")[-1]
+    matchstr = os.path.split(fname)[1]
     matchstr = matchstr.lower().replace(" ", "")
     if not episode == -1:
         for reg in epiregs:
