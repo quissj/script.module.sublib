@@ -25,6 +25,7 @@ import xbmc
 import re
 import urllib
 import urllib2
+import urlparse
 import cookielib
 import unicodedata
 import HTMLParser
@@ -215,3 +216,40 @@ def getsub(fname, show, season, episode):
         return fname
     else:
         return fname
+
+
+def infofrompath(path, item):
+    path = urlparse.urlparse(path)
+    path = urllib.unquote_plus(path.path)
+    if path.endswith("/"):
+        path = path[:-1]
+    fname = os.path.split(path)[1]
+    regmatch = False
+    for reg in epiregs:
+        reg = "(.*?)" + reg
+        m = re.search(reg, fname)
+        if m and m.lastindex == 3:
+            regmatch = True
+            # epi,sea
+            item.show = True
+            item.title = item.group(1)
+            if m.group(2).isdigit():
+                item.season = int(m.group(2))
+            if m.group(3).isdigit():
+                item.episode = int(m.group(3))
+        if m and m.lastindex == 2:
+            regmatch = True
+            # epi only
+            item.show = True
+            item.title = item.group(1)
+            if m.group(2).isdigit():
+                item.season = -1
+                item.episode = int(m.group(2))
+        if regmatch:
+            break
+    if not regmatch:
+        # remove extension
+        item.show = False
+        fname = "".join(fname.split(".")[:-1])
+        item.title = fname
+    return item

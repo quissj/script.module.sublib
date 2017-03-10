@@ -27,6 +27,38 @@ import sublib.utils
 
 
 class model():
+    '''This is the class that finds all possible information from Kodi and
+    serves them in their attributes.
+
+    Attributes:
+
+        title: Title of the media. None if not found
+
+        show: bool flag if the media is a tvshow (includes animes)
+
+        season: integer showing the season, if not known -1, if special:0
+
+        episode: integer showing the season, if not known -1, if special:0
+
+        year: integer showing the year of the media, None if not known
+
+        languages: list of 2 letter iso639 code that the subtitles should be
+            found with. First item is always the prferred. You don't have to
+            process this information, as long as sub.iso is provided filtering
+            and priotrization is done automatically.
+
+        imdb: imdb id string starting with tt
+
+        tvdb: tvdb id string
+
+        tmdb: tmdb id string
+
+        trakt: trakt id string
+
+        slug: slug id string
+    Returns:
+        model instance
+    '''
     def __repr__(self):
         return repr(vars(self))
 
@@ -98,18 +130,14 @@ class model():
             pass
 
         # process languages
-        if isinstance(langs, (list, tuple)):
-            self.languages = langs
-        else:
-            preflang = preflang.decode('utf-8')
-            preflang = xbmc.convertLanguage(preflang, 0)
-            if not preflang == "":
-                self.languages.append(preflang)
-            languages = urllib.unquote(langs).decode('utf-8')
-            languages = languages.split(",")
-            for lang in languages:
-                lang = xbmc.convertLanguage(lang, 0)
-                if lang not in self.languages:
-                    self.languages.append(lang)
+        preflang = preflang.decode('utf-8')
+        preflang = xbmc.convertLanguage(preflang, 0)
+        if not preflang == "":
+            self.languages.append(preflang)
+        languages = urllib.unquote(langs).decode('utf-8')
+        languages = languages.split(",")
+        for lang in languages:
+            lang = xbmc.convertLanguage(lang, 0)
+            if lang not in self.languages:
+                self.languages.append(lang)
 
-        # to do process filename for title, season, episode

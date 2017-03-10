@@ -5,15 +5,10 @@ try:
 except ImportError:
     #kodi stubs directory
     sys.path.append(sys.argv[1])
-import boogie
-import core
-import helper
-from core import api
-boogie.api = api
-boogie.listitem = core.listitem
-boogie.__all__ = ["container", "dispatch", "navigator", "resolver", "player", "api", "lisitem"]
-
+import sublib
+import sublib.sub
+import sublib.item
 import pydocmd
-modules = [boogie, helper]
+modules = [sublib, sublib.sub, sublib.item]
 pages = ["introduction.md", "quickstart.md"]
 pydocmd.create(modules, pages, "../README.md")

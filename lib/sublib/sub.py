@@ -21,36 +21,75 @@ import sublib.iso639
 
 
 class model(object):
+    '''Factory class that defines a found subtitle.
+
+    Params:
+        label  : (required,string) Label to be shown on found subtitles
+        iso    : (required, 2 letter iso639-1 country code) localization of
+            the subtitle
+        rating : (optional[0], 0 <= integer <=4 ) rating of the subtitle
+        sync   : (optional[False], Bool) bool flag that determines if it is the
+            exact match
+        cc     : (optional[False],Bool) bool flag that determines if it is a closed
+            caption
+        priorty: (optional[0],int) higher the value is, topper the result is
+            shown in gui, note that preffered language sorting is done
+            automatically and not to be considered as a part of this value.
+
+    Attributes:
+
+        label  : (string): Label to be shown on found subtitles
+        iso    : (2 letter iso639-1 country code) localization of the subtitle
+        rating : (0 <= integer <=4 ) rating of the subtitle
+        sync   : (Bool) bool flag that determines if it is the exact match
+        cc     : (Bool) bool flag that determines if it is a closed caption
+        priorty: (int) higher the value is, topper the result is shown in gui,
+            note that preffered language sorting is done automatically and not
+            to be considered as a part of this value.
+        args   : (list) list of arguments to be passed to download function
+        kwargs : (dict) list of keyword arguments to be passed to download function
+
+    Returns:
+        subtitle instance
+    '''
     @property
     def label(self):
+        '''Label to be shown on found subtitles'''
         return self.__label
 
     @property
     def iso(self):
+        '''(2 letter iso639-1 country code): localization of the subtitle'''
         return self.__iso
 
     @property
     def sync(self):
+        '''bool flag that determines if it is the exact match'''
         return self.__sync
 
     @property
     def cc(self):
+        '''bool flag that determines if it is a closed caption'''
         return self.__cc
 
     @property
     def rating(self):
+        '''(0 <= integer <=4 ): rating of the subtitle'''
         return self.__rating
 
     @property
     def args(self):
+        '''Arguments to be passed to self.download method of service'''
         return self.__args
 
     @property
     def kwargs(self):
+        '''Keyword arguments to be passed to self.download method of service'''
         return self.__kwargs
 
     @property
     def priority(self):
+        '''Priority of the subtitle in the shown list'''
         return self.__priority
 
     @label.setter
@@ -104,6 +143,13 @@ class model(object):
         self.__kwargs = {}
 
     def download(self, *args, **kwargs):
+        '''The arguments sent to this method will be pushed to self.download
+        method of the service
+
+        Params:
+            *args: arguments to be passed
+            **kwargs: keyword arguments to be passed
+        '''
         self.__args = args
         self.__kwargs = kwargs
 
@@ -122,7 +168,7 @@ class model(object):
                      })
 
 
-class sorter():
+class _sorter():
     def __init__(self, piso):
         self.piso = piso
 

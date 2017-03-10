@@ -36,6 +36,39 @@ import xbmcvfs
 
 
 class service(object):
+    '''Base class to inherit for subtitle service.
+
+    Example:
+        import sublib
+        import os
+
+        class mysubtitlesite(sublib.service):
+
+            def search(self):
+                print self.item
+                sub = self.sub("Test Subtitle", "en")
+                sub.download("http://a.com/b/c.srt")
+                self.addsub(sub)
+
+            def download(self, link)
+                fname = os.path.join(self.path, "test.srt")
+                with open(fname, "w") as f:
+                    f.write(self.download(link))
+                self.addfile(fname)
+    Params:
+        ua: User-Agent string to be used for http queries
+
+    Attributes:
+
+        sub: factory class for found subtitles, see sublib.sub.model()
+
+        item: object holding information that is found from Kodi,
+            see sublib.item.model()
+
+        path: temp directory to save the downloaded subtitle file,
+            you can use your own directory if you want
+
+    '''
 
     sub = sublib.sub.model
 
@@ -58,21 +91,19 @@ class service(object):
         params = dict(urlparse.parse_qsl(sys.argv[2][1:]))
         params = sublib.utils.dformat(params, json.loads)
         action = params.get("action", None)
+        preflang = self._params['preferredlanguage']
+        langs = self._params['languages']
+        self.item = sublib.item.model(preflang, langs)
+        self.item = sublib.utils.infofrompath(self.item.fname, self.item)
         if action:
             method = getattr(self, "_action_%s" % action.lower())
             self._params = params
             method()
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-    def init(self, ua=None):
-        return ua
-
     def _action_search(self):
-        preflang = self._params['preferredlanguage']
-        langs = self._params['languages']
-        self.item = sublib.item.model(preflang, langs)
         self.search()
-        sorter = sublib.sub.sorter(self.item.languages[0])
+        sorter = sublib.sub._sorter(self.item.languages[0])
         self._subs.sort(key=sorter.method, reverse=True)
         for sub in self._subs:
             listitem = xbmcgui.ListItem(
@@ -87,7 +118,8 @@ class service(object):
                     "action": "download",
                     "args": sub.args,
                     "kwargs": sub.kwargs,
-                    "langs": self.item.languages,
+                    "languages": self._params['languages'],
+                    "prefferedlanguage": self._params['preferredlanguage']
                     }
             url = urllib.urlencode(sublib.utils.dformat(args, json.dumps))
             url = "plugin://%s/?%s" % (self._sid, url)
@@ -99,8 +131,12 @@ class service(object):
                                         isFolder=False
                                         )
 
+    def _action_manualsearch(self):
+        self.item = sublib.utils.infofrompath(self._params["searchstring"],
+                                              self.item)
+        self._action_search(self)
+
     def _action_download(self):
-        self.item = sublib.item.model(None, self._params["langs"])
         self.download(*self._params["args"], **self._params["kwargs"])
         for fname in self._paths:
             sub = sublib.utils.getsub(
@@ -120,20 +156,92 @@ class service(object):
                                         )
 
     def search(self):
+        '''This is the method that service has to override. Service supposed to
+        find the correct subtitle using self.item obeject, and create a
+        self.sub instance , and then the found instance must be added with
+        self.addsub(subins) method.
+
+        Example:
+            def search(self):
+                print self.item
+                sub = self.sub("Test Subtitle", "en")
+                sub.download("http://a.com/b/c.srt")
+                self.addsub(sub)
+
+            def download(self, link)
+                fname = os.path.join(self.path, "test.srt")
+                with open(fname, "w") as f:
+                    f.write(self.download(link))
+                self.addfile(fname)
+
+        Params:
+            None
+
+        Returns:
+            None
+        '''
         sub = self.sub("Test Subtitle", "en")
-        sub.download(1, 2, test=3)
         self.addsub(sub)
 
     def download(self, *args, **kwargs):
+        '''This is the method that service has to override. Service supposed to
+        download the found subtitle to a path, and add this path with
+        self.addfile("/path/to/file"). *args, **kwargs of the of method is
+        dynamically created with sub.download(*arg, **kwargs) method. You can
+        use self.temp folder to save to for ease of access
+        but this is not mendatory
+
+        Example:
+            def download(self, link, id, isstuff)
+                fname = os.path.join(self.path, "test.srt")
+                with open(fname, "w") as f:
+                    f.write(self.download(link))
+                self.addfile(fname)
+
+        Params:
+            *args: created dynamically from sub.download(*args, *kwargs) method
+            **kwargs: created dynamically from sub.download(*args, *kwargs)
+                method
+
+        Returns:
+            None
+        '''
         self.addfile("/path/to/file")
 
     def num(self, issub=True):
+        '''Returns the number of found instances. if issub is True, found
+        subtitles are counted else downlaoded files are counted.
+
+        Params:
+            issub: if issub is True, found subtitles are counted else 
+                downlaoded files are counted.
+
+        Returns:
+            int:numberofitems
+        '''
         if issub:
             return len(self._subs)
         else:
             return len(self._paths)
 
     def request(self, u, query=None, data=None, referer=None, binary=False):
+        ''' Helper method to make an http query. This is method is good enough
+        for vast majority of your needs, includding cookie handlers, with/get
+        post requests, if you need more advanced queries you can also use
+        requests or your own implementation
+
+        Params:
+            u: url of the request
+            query: dict carrying the url request arguments
+            data: dict carrying the values to be posted
+            referer: referer for request header
+            binary: bool flag that determines if the return data should be
+                encoded text if set False, or urllib2.response object
+                if set True
+
+        Returns:
+            str/urllib2.reponse:response
+        '''
         return sublib.utils.download(u,
                                      query,
                                      data,
@@ -143,9 +251,26 @@ class service(object):
                                      )
 
     def addsub(self, sub):
+        ''' Method to use if a subtitle is found when in self.search method
+
+        Params:
+            sub: subtitle instance of self.sub factory class
+
+        Returns:
+            None
+        '''
+
         if not isinstance(sub, sublib.sub.model):
             raise TypeError(sub)
         self._subs.append(sub)
 
     def addfile(self, path):
+        ''' Method to use if a subtitle is downloaded when in self.download method
+
+        Params:
+            path: /path/to/subtitle/file.srt
+
+        Returns:
+            None
+        '''
         self._paths.append(path)
