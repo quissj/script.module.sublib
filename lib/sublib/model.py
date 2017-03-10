@@ -91,8 +91,8 @@ class service(object):
         params = dict(urlparse.parse_qsl(sys.argv[2][1:]))
         params = sublib.utils.dformat(params, json.loads)
         action = params.get("action", None)
-        preflang = self._params['preferredlanguage']
-        langs = self._params['languages']
+        preflang = params.get('preferredlanguage', "")
+        langs = params.get('languages', [])
         self.item = sublib.item.model(preflang, langs)
         self.item = sublib.utils.infofrompath(self.item.fname, self.item)
         if action:
@@ -134,7 +134,14 @@ class service(object):
     def _action_manualsearch(self):
         self.item = sublib.utils.infofrompath(self._params["searchstring"],
                                               self.item)
-        self._action_search(self)
+        self.item.imdb = None
+        self.item.tvdb = None
+        self.item.tmdb = None
+        self.item.trakt = None
+        self.item.slug = None
+        if self.item.show:
+            self.item.year = None
+        self._action_search()
 
     def _action_download(self):
         self.download(*self._params["args"], **self._params["kwargs"])

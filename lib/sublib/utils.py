@@ -219,20 +219,24 @@ def getsub(fname, show, season, episode):
 
 
 def infofrompath(path, item):
-    path = urlparse.urlparse(path)
-    path = urllib.unquote_plus(path.path)
+    path = urlparse.urlparse(str(path)).path
+    path = urllib.unquote_plus(path)
     if path.endswith("/"):
         path = path[:-1]
     fname = os.path.split(path)[1]
     regmatch = False
     for reg in epiregs:
-        reg = "(.*?)" + reg
-        m = re.search(reg, fname)
+        reg = "(.*)" + reg
+        matchstr = fname.lower().replace(".", " ")
+        matchstr = matchstr.replace(",", " ")
+        matchstr = matchstr.replace("_", " ")
+        matchstr = matchstr.replace("-", " ")
+        m = re.search(reg, matchstr)
         if m and m.lastindex == 3:
             regmatch = True
             # epi,sea
             item.show = True
-            item.title = item.group(1)
+            item.title = m.group(1)
             if m.group(2).isdigit():
                 item.season = int(m.group(2))
             if m.group(3).isdigit():
@@ -241,7 +245,7 @@ def infofrompath(path, item):
             regmatch = True
             # epi only
             item.show = True
-            item.title = item.group(1)
+            item.title = m.group(1)
             if m.group(2).isdigit():
                 item.season = -1
                 item.episode = int(m.group(2))
@@ -249,7 +253,7 @@ def infofrompath(path, item):
             break
     if not regmatch:
         # remove extension
-        item.show = False
-        fname = "".join(fname.split(".")[:-1])
+        if "." in fname:
+            fname = ".".join(fname.split(".")[:-1])
         item.title = fname
     return item
