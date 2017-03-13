@@ -25,7 +25,6 @@ import xbmc
 import re
 import urllib
 import urllib2
-import urlparse
 import cookielib
 import unicodedata
 import HTMLParser
@@ -37,19 +36,26 @@ _hparser = HTMLParser.HTMLParser()
 
 _ua = "KODI / XBMC Sublib Library"
 
-epiregs = [
-            r"s([0-9]+)xe([0-9]+)",
-            r"s([0-9]+)x([0-9]+)",
-            r"s([0-9]+)e([0-9]+)",
-            r"s([0-9]+)-e([0-9]+)",
-            r"s([0-9]+)_e([0-9]+)",
-            r"s([0-9]+) e([0-9]+)",
-            r"([0-9]+)x([0-9]+)",
-            r"([0-9]+)-([0-9]+)",
-            r"([0-9]+)_([0-9]+)",
-            r"-([0-9]+)",
-            r"_([0-9]+)",
+prefixes = [
+            ["e", "s"],
+            ["episode", "seasons"],
+            ["", ""],
             ]
+
+seperators = ["", "x", "-", "_"]
+
+regs = []
+
+for epre, spre in prefixes:
+    # build regexes for season and episodes
+    for sep in seperators:
+        regs.append("%s([0-9]+)%s%s([0-9]+)" % (spre, sep, epre))
+
+for epre, spre in prefixes:
+    # build regexes for episode only (animes)
+    if epre == "" or epre == "x":
+        continue
+    regs.append("%s([0-9]+)" % epre)
 
 
 def normstr(s):
@@ -163,7 +169,7 @@ def findshow(season, episode, fname):
     matchstr = os.path.split(fname)[1]
     matchstr = matchstr.lower().replace(" ", "")
     if not episode == -1:
-        for reg in epiregs:
+        for reg in regs:
             m = re.search(reg, matchstr)
             if m and m.lastindex == 2 and\
                     m.group(1).isdigit() and \
@@ -218,42 +224,41 @@ def getsub(fname, show, season, episode):
         return fname
 
 
-def infofrompath(path, item):
-    path = urlparse.urlparse(str(path)).path
-    path = urllib.unquote_plus(path)
-    if path.endswith("/"):
-        path = path[:-1]
-    fname = os.path.split(path)[1]
+def infofromstr(txt, title=None, show=False, episode=-1, season=-1):
+    txt = str(txt)
     regmatch = False
-    for reg in epiregs:
+    matchstr = txt.lower().replace(".", " ")
+    matchstr = matchstr.replace(",", " ")
+    matchstr = matchstr.replace("_", " ")
+    matchstr = matchstr.replace("-", " ")
+    for reg in regs:
         reg = "(.*)" + reg
-        matchstr = fname.lower().replace(".", " ")
-        matchstr = matchstr.replace(",", " ")
-        matchstr = matchstr.replace("_", " ")
-        matchstr = matchstr.replace("-", " ")
         m = re.search(reg, matchstr)
         if m and m.lastindex == 3:
             regmatch = True
             # epi,sea
-            item.show = True
-            item.title = m.group(1)
+            show = True
+            if not title:
+                title = m.group(1)
             if m.group(2).isdigit():
-                item.season = int(m.group(2))
+                season = int(m.group(2))
             if m.group(3).isdigit():
-                item.episode = int(m.group(3))
+                episode = int(m.group(3))
         if m and m.lastindex == 2:
             regmatch = True
             # epi only
-            item.show = True
-            item.title = m.group(1)
+            show = True
+            if not title:
+                title = m.group(1)
             if m.group(2).isdigit():
-                item.season = -1
-                item.episode = int(m.group(2))
+                season = -1
+                episode = int(m.group(2))
         if regmatch:
             break
     if not regmatch:
         # remove extension
-        if "." in fname:
-            fname = ".".join(fname.split(".")[:-1])
-        item.title = fname
-    return item
+        if "." in txt:
+            txt = ".".join(txt.split(".")[:-1])
+        if not title:
+            title = txt
+    return title, show, season, episode

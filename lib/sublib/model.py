@@ -94,7 +94,14 @@ class service(object):
         preflang = params.get('preferredlanguage', "")
         langs = params.get('languages', [])
         self.item = sublib.item.model(preflang, langs)
-        self.item = sublib.utils.infofrompath(self.item.fname, self.item)
+        self.item.title, self.item.show, self.item.season, self.item.episode =\
+            sublib.utils.infofromstr(
+                                     self.item.fname,
+                                     self.item.title,
+                                     self.item.show,
+                                     self.item.season,
+                                     self.item.episode
+                                     )
         if action:
             method = getattr(self, "_action_%s" % action.lower())
             self._params = params
@@ -106,6 +113,8 @@ class service(object):
         sorter = sublib.sub._sorter(self.item.languages[0])
         self._subs.sort(key=sorter.method, reverse=True)
         for sub in self._subs:
+            if sub.iso not in self.item.languages and len(sub.iso) == 2:
+                continue
             listitem = xbmcgui.ListItem(
                         label=xbmc.convertLanguage(sub.iso, xbmc.ENGLISH_NAME),
                         label2=sub.label,
@@ -132,8 +141,15 @@ class service(object):
                                         )
 
     def _action_manualsearch(self):
-        self.item = sublib.utils.infofrompath(self._params["searchstring"],
-                                              self.item)
+        self.title = None
+        self.item.title, self.item.show, self.item.season, self.item.episode =\
+            sublib.utils.infofromstr(
+                                     self._params["searchstring"],
+                                     self.item.title,
+                                     self.item.show,
+                                     self.item.season,
+                                     self.item.episode
+                                     )
         self.item.imdb = None
         self.item.tvdb = None
         self.item.tmdb = None

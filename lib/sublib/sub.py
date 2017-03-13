@@ -100,9 +100,18 @@ class model(object):
 
     @iso.setter
     def iso(self, val):
-        if val not in sublib.iso639.one:
+        val = val.lower().strip()
+        twolet = val in sublib.iso639.one
+        human = val in sublib.iso639.one.values()
+        if not twolet and not human:
             raise(ValueError(val))
-        self.__iso = val
+        if twolet:
+            self.__iso = val
+        if human:
+            for k, v in sublib.iso639.one.iteritems():
+                if  v == val:
+                    self.__iso = k
+                    break
 
     @cc.setter
     def cc(self, val):

@@ -19,6 +19,8 @@
 '''
 import urllib
 import json
+import urlparse
+import os
 
 import xbmc
 import xbmcgui
@@ -56,6 +58,8 @@ class model():
         trakt: trakt id string
 
         slug: slug id string
+
+        filename: filename of the file playing
     Returns:
         model instance
     '''
@@ -74,8 +78,6 @@ class model():
         self.year = None  # int
         self.title = None  # str
         self.show = False  # bool
-        fname = urllib.unquote(xbmc.Player().getPlayingFile().decode('utf-8'))
-        self.fname = fname
 
         # process year
         year = xbmc.getInfoLabel("VideoPlayer.Year").strip()
@@ -141,3 +143,11 @@ class model():
             if lang not in self.languages:
                 self.languages.append(lang)
 
+        # process file name
+        fname = urllib.unquote(xbmc.Player().getPlayingFile().decode('utf-8'))
+        path = urlparse.urlparse(fname).path
+        path = urllib.unquote_plus(path)
+        if path.endswith("/"):
+            path = path[:-1]
+        fname = os.path.split(path)[1]
+        self.fname = fname
