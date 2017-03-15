@@ -141,7 +141,7 @@ class service(object):
                                         )
 
     def _action_manualsearch(self):
-        self.title = None
+        self.item.title = None
         self.item.title, self.item.show, self.item.season, self.item.episode =\
             sublib.utils.infofromstr(
                                      self._params["searchstring"],

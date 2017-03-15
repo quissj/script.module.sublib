@@ -74,7 +74,7 @@ class model(object):
 
     @property
     def rating(self):
-        '''(0 <= integer <=4 ): rating of the subtitle'''
+        '''(0 <= integer <=5 ): rating of the subtitle'''
         return self.__rating
 
     @property
@@ -182,4 +182,7 @@ class _sorter():
         self.piso = piso
 
     def method(self, ob):
-        return int(ob.iso == self.piso), ob.priority
+        # first sort by user preffered lang.
+        # then sort by service priority
+        # then sort by subtitle rating
+        return int(ob.iso == self.piso), ob.priority, ob.rating
