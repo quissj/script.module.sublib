@@ -236,7 +236,7 @@ class service(object):
         subtitles are counted else downlaoded files are counted.
 
         Params:
-            issub: if issub is True, found subtitles are counted else 
+            issub: if issub is True, found subtitles are counted else
                 downlaoded files are counted.
 
         Returns:

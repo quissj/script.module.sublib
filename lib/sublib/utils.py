@@ -68,7 +68,7 @@ def dformat(d, m):
     for k, v in d.iteritems():
         try:
             r[k] = m(v)
-        except:
+        except Exception:
             r[k] = v
     return r
 
@@ -153,7 +153,9 @@ def selectfile(files, prefix="/"):
         return prefix + optlist[index]
 
 
-def getlof(ar, fname, path="", lof=[]):
+def getlof(ar, fname, path="", lof=None):
+    if not lof:
+        lof = []
     ds, fs = xbmcvfs.listdir("%s://%s%s" % (ar, urllib.quote_plus(fname),
                                             path))
     for d in ds:

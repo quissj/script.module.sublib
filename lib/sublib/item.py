@@ -128,7 +128,7 @@ class model():
             for k in ["tvdb", "tmdb", "slug", "trakt"]:
                 if k in traktids and not traktids[k].strip() == "":
                     setattr(self, k, traktids[k].strip())
-        except:
+        except Exception:
             pass
 
         # process languages
