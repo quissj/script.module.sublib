@@ -46,6 +46,8 @@ seperators = ["", "x", "-", "_"]
 
 regs = []
 
+trims = ["360p", "480p", "576p", "720p", "1080p", "x264", "h264", "bluray"]
+
 for epre, spre in prefixes:
     # build regexes for season and episodes
     for sep in seperators:
@@ -178,13 +180,11 @@ def findshow(season, episode, fname):
                     m.group(2).isdigit() and \
                     int(m.group(1)) == season and \
                     int(m.group(2)) == episode:
-                # print "!!!!!!matched %s:%s" % (matchstr, reg)
                 return fname
             if m and m.lastindex == 1 and\
                     m.group(1).isdigit() and \
                     int(m.group(1)) == episode and \
                     season < 0:
-                # print "++++++matched %s:%s" % (matchstr, reg)
                 return fname
 
 
@@ -226,13 +226,20 @@ def getsub(fname, show, season, episode):
         return fname
 
 
-def infofromstr(txt, title=None, show=False, episode=-1, season=-1):
-    txt = str(txt)
+def infofromstr(txt, title=None, show=False, season=-1, episode=-1):
+    if not isinstance(txt, (str, unicode)):
+        txt = str(txt)
     regmatch = False
     matchstr = txt.lower().replace(".", " ")
     matchstr = matchstr.replace(",", " ")
     matchstr = matchstr.replace("_", " ")
     matchstr = matchstr.replace("-", " ")
+    # trim resolation
+    for trm in trims:
+        matchstr = matchstr.replace(trm, "")
+    # trim year info
+    matchstr = re.sub("([0-9]{4})", "", matchstr)
+    matchstr = matchstr.replace("  ", " ")
     for reg in regs:
         reg = "(.*)" + reg
         m = re.search(reg, matchstr)
