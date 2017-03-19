@@ -87,7 +87,6 @@ class model():
         # process season episode
         season = xbmc.getInfoLabel("VideoPlayer.Season").strip()
         episode = xbmc.getInfoLabel("VideoPlayer.Episode").strip()
-
         if episode.lower().find("s") > -1:
             season = "0"
             episode = episode[-1:]
@@ -129,7 +128,7 @@ class model():
             for k in ["tvdb", "tmdb", "slug", "trakt"]:
                 if k in traktids and not traktids[k].strip() == "":
                     setattr(self, k, traktids[k].strip())
-        except Exception:
+        except:
             pass
 
         # process languages

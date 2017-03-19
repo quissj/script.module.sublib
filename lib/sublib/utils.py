@@ -27,37 +27,49 @@ import urllib
 import urllib2
 import cookielib
 import unicodedata
-import HTMLParser
 import os
 
 _cj = cookielib.CookieJar()
 _opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
-_hparser = HTMLParser.HTMLParser()
 
 _ua = "KODI / XBMC Sublib Library"
 
-prefixes = [
+_prefixes = [
             ["e", "s"],
             ["episode", "seasons"],
             ["", ""],
             ]
 
-seperators = ["", "x", "-", "_"]
+_seperators = ["", "x", "-", "_"]
 
-regs = []
+_regs = []
 
-trims = ["360p", "480p", "576p", "720p", "1080p", "x264", "h264", "bluray"]
 
-for epre, spre in prefixes:
+def html_decode(s):
+    htmlCodes = (
+            ("'", '&#39;'),
+            ('"', '&quot;'),
+            ('>', '&gt;'),
+            ('<', '&lt;'),
+            ('&', '&amp;'),
+            (' ', '&nbsp;'),
+            ("'", "&apos;")
+        )
+    for code in htmlCodes:
+        s = s.replace(code[1], code[0])
+    return s
+
+
+for epre, spre in _prefixes:
     # build regexes for season and episodes
-    for sep in seperators:
-        regs.append("%s([0-9]+)%s%s([0-9]+)" % (spre, sep, epre))
+    for sep in _seperators:
+        _regs.append("%s([0-9]+)%s%s([0-9]+)" % (spre, sep, epre))
 
-for epre, spre in prefixes:
+for epre, spre in _prefixes:
     # build regexes for episode only (animes)
     if epre == "" or epre == "x":
         continue
-    regs.append("%s([0-9]+)" % epre)
+    _regs.append("%s([0-9]+)" % epre)
 
 
 def normstr(s):
@@ -70,7 +82,7 @@ def dformat(d, m):
     for k, v in d.iteritems():
         try:
             r[k] = m(v)
-        except Exception:
+        except:
             r[k] = v
     return r
 
@@ -93,7 +105,7 @@ def download(u, query=None, data=None, referer=None, binary=False, ua=None,
     if not binary:
         res = res.read()
         res = res.decode(encoding)
-        res = _hparser.unescape(res)
+        res = html_decode(res)
     return res
 
 
@@ -155,9 +167,7 @@ def selectfile(files, prefix="/"):
         return prefix + optlist[index]
 
 
-def getlof(ar, fname, path="", lof=None):
-    if not lof:
-        lof = []
+def getlof(ar, fname, path="", lof=[]):
     ds, fs = xbmcvfs.listdir("%s://%s%s" % (ar, urllib.quote_plus(fname),
                                             path))
     for d in ds:
@@ -173,18 +183,20 @@ def findshow(season, episode, fname):
     matchstr = os.path.split(fname)[1]
     matchstr = matchstr.lower().replace(" ", "")
     if not episode == -1:
-        for reg in regs:
+        for reg in _regs:
             m = re.search(reg, matchstr)
             if m and m.lastindex == 2 and\
                     m.group(1).isdigit() and \
                     m.group(2).isdigit() and \
                     int(m.group(1)) == season and \
                     int(m.group(2)) == episode:
+                # print "!!!!!!matched %s:%s" % (matchstr, reg)
                 return fname
             if m and m.lastindex == 1 and\
                     m.group(1).isdigit() and \
                     int(m.group(1)) == episode and \
                     season < 0:
+                # print "++++++matched %s:%s" % (matchstr, reg)
                 return fname
 
 
@@ -226,21 +238,14 @@ def getsub(fname, show, season, episode):
         return fname
 
 
-def infofromstr(txt, title=None, show=False, season=-1, episode=-1):
-    if not isinstance(txt, (str, unicode)):
-        txt = str(txt)
+def infofromstr(txt, title=None, show=False, episode=-1, season=-1):
+    txt = str(txt)
     regmatch = False
     matchstr = txt.lower().replace(".", " ")
     matchstr = matchstr.replace(",", " ")
     matchstr = matchstr.replace("_", " ")
     matchstr = matchstr.replace("-", " ")
-    # trim resolation
-    for trm in trims:
-        matchstr = matchstr.replace(trm, "")
-    # trim year info
-    matchstr = re.sub("([0-9]{4})", "", matchstr)
-    matchstr = matchstr.replace("  ", " ")
-    for reg in regs:
+    for reg in _regs:
         reg = "(.*)" + reg
         m = re.search(reg, matchstr)
         if m and m.lastindex == 3:
