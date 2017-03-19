@@ -185,4 +185,4 @@ class _sorter():
         # first sort by user preffered lang.
         # then sort by service priority
         # then sort by subtitle rating
-        return int(ob.iso == self.piso), ob.priority, ob.rating
+        return int(ob.iso == self.piso), ob.sync, ob.priority, ob.rating

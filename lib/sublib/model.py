@@ -142,14 +142,16 @@ class service(object):
 
     def _action_manualsearch(self):
         self.item.title = None
-        self.item.title, self.item.show, self.item.season, self.item.episode =\
+        self.item.title, self.item.show, season, episode =\
             sublib.utils.infofromstr(
                                      self._params["searchstring"],
                                      self.item.title,
                                      self.item.show,
-                                     self.item.season,
-                                     self.item.episode
                                      )
+        if season >= 0:
+            self.item.season = season
+        if episode >= 0:
+            self.item.episode = episode
         self.item.imdb = None
         self.item.tvdb = None
         self.item.tmdb = None
@@ -236,7 +238,7 @@ class service(object):
         subtitles are counted else downlaoded files are counted.
 
         Params:
-            issub: if issub is True, found subtitles are counted else 
+            issub: if issub is True, found subtitles are counted else
                 downlaoded files are counted.
 
         Returns:
