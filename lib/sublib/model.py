@@ -74,7 +74,7 @@ class service(object):
 
     def __init__(self, ua=None):
         if not ua:
-            self._ua = sublib.utils._ua
+            self._ua = sublib.utils.useragent
         else:
             self._ua = ua
         self._subs = []
@@ -110,7 +110,7 @@ class service(object):
 
     def _action_search(self):
         self.search()
-        sorter = sublib.sub._sorter(self.item.languages[0])
+        sorter = sublib.sub.sorter(self.item.languages[0])
         self._subs.sort(key=sorter.method, reverse=True)
         for sub in self._subs:
             if sub.iso not in self.item.languages and len(sub.iso) == 2:
@@ -249,7 +249,7 @@ class service(object):
         else:
             return len(self._paths)
 
-    def request(self, u, query=None, data=None, referer=None, binary=False):
+    def request(self, url, query=None, data=None, referer=None, binary=False):
         ''' Helper method to make an http query. This is method is good enough
         for vast majority of your needs, includding cookie handlers, with/get
         post requests, if you need more advanced queries you can also use
@@ -267,7 +267,7 @@ class service(object):
         Returns:
             str/urllib2.reponse:response
         '''
-        return sublib.utils.download(u,
+        return sublib.utils.download(url,
                                      query,
                                      data,
                                      referer,

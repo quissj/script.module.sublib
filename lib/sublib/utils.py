@@ -34,7 +34,7 @@ _cj = cookielib.CookieJar()
 _opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
 _hparser = HTMLParser.HTMLParser()
 
-_ua = "KODI / XBMC Sublib Library"
+useragent = "KODI / XBMC Sublib Library"
 
 prefixes = [
             ["e", "s"],
@@ -78,7 +78,7 @@ def dformat(d, m):
 def download(u, query=None, data=None, referer=None, binary=False, ua=None,
              encoding="utf-8"):
     if not ua:
-        ua = _ua
+        ua = useragent
     if query:
         q = urllib.urlencode(query)
         u += "?" + q

@@ -177,7 +177,7 @@ class model(object):
                      })
 
 
-class _sorter():
+class sorter(object):
     def __init__(self, piso):
         self.piso = piso
 
