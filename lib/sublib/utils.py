@@ -27,12 +27,10 @@ import urllib
 import urllib2
 import cookielib
 import unicodedata
-import HTMLParser
 import os
 
 _cj = cookielib.CookieJar()
 _opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
-_hparser = HTMLParser.HTMLParser()
 
 useragent = "KODI / XBMC Sublib Library"
 
@@ -58,6 +56,21 @@ for epre, spre in prefixes:
     if epre == "" or epre == "x":
         continue
     regs.append("%s([0-9]+)" % epre)
+
+
+def html_decode(s):
+    htmlCodes = (
+            ("'", '&#39;'),
+            ('"', '&quot;'),
+            ('>', '&gt;'),
+            ('<', '&lt;'),
+            ('&', '&amp;'),
+            (' ', '&nbsp;'),
+            ("'", "&apos;")
+        )
+    for code in htmlCodes:
+        s = s.replace(code[1], code[0])
+    return s
 
 
 def normstr(s):
@@ -93,7 +106,7 @@ def download(u, query=None, data=None, referer=None, binary=False, ua=None,
     if not binary:
         res = res.read()
         res = res.decode(encoding)
-        res = _hparser.unescape(res)
+        res = html_decode(res)
     return res
 
 
