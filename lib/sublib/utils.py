@@ -49,6 +49,8 @@ trims = ["360p", "480p", "576p", "720p", "1080p", "x264", "h264", "bluray"]
 for epre, spre in prefixes:
     # build regexes for season and episodes
     for sep in seperators:
+        if epre == spre == sep == "":
+            continue
         regs.append("%s([0-9]+)%s%s([0-9]+)" % (spre, sep, epre))
 
 for epre, spre in prefixes:
@@ -240,13 +242,17 @@ def getsub(fname, show, season, episode):
 
 
 def infofromstr(txt, title=None, show=False, season=-1, episode=-1):
+    def striptitle(title):
+        chars = [".", ",", "_", "-"]
+        for c in chars:
+            title = title.replace(c, " ")
+        title = title.replace("  ", "")
+        title = title.strip()
+        return title
     if not isinstance(txt, (str, unicode)):
         txt = str(txt)
     regmatch = False
-    matchstr = txt.lower().replace(".", " ")
-    matchstr = matchstr.replace(",", " ")
-    matchstr = matchstr.replace("_", " ")
-    matchstr = matchstr.replace("-", " ")
+    matchstr = txt.lower()
     # trim resolation
     for trm in trims:
         matchstr = matchstr.replace(trm, "")
@@ -261,7 +267,7 @@ def infofromstr(txt, title=None, show=False, season=-1, episode=-1):
             # epi,sea
             show = True
             if not title:
-                title = m.group(1)
+                title = striptitle(m.group(1))
             if m.group(2).isdigit():
                 season = int(m.group(2))
             if m.group(3).isdigit():
@@ -271,7 +277,7 @@ def infofromstr(txt, title=None, show=False, season=-1, episode=-1):
             # epi only
             show = True
             if not title:
-                title = m.group(1)
+                title = striptitle(m.group(1))
             if m.group(2).isdigit():
                 season = -1
                 episode = int(m.group(2))
@@ -279,8 +285,8 @@ def infofromstr(txt, title=None, show=False, season=-1, episode=-1):
             break
     if not regmatch:
         # remove extension
-        if "." in txt:
-            txt = ".".join(txt.split(".")[:-1])
+        if "." in matchstr:
+            matchstr = ".".join(matchstr.split(".")[:-1])
         if not title:
-            title = txt
+            title = striptitle(matchstr)
     return title, show, season, episode
