@@ -114,6 +114,7 @@ class service(object):
         self._subs.sort(key=sorter.method, reverse=True)
         for sub in self._subs:
             if sub.iso not in self.item.languages and len(sub.iso) == 2:
+                xbmc.log("SUBLIB: Not Preferred Language ISO %s" % repr(sub.iso), xbmc.LOGINFO)
                 continue
             listitem = xbmcgui.ListItem(
                         label=xbmc.convertLanguage(sub.iso, xbmc.ENGLISH_NAME),

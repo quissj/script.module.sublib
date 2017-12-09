@@ -176,11 +176,11 @@ def getlof(ar, fname, path="", lof=None):
     ds, fs = xbmcvfs.listdir("%s://%s%s" % (ar, urllib.quote_plus(fname),
                                             path))
     for d in ds:
-        dpath = path + "/" + d
+        dpath = path + "/" + unicode(d.decode("utf-8"))
         lof.append(dpath + "/")
         getlof(ar, fname, dpath, lof)
     for f in fs:
-        lof.append(path + "/" + f)
+        lof.append(path + "/" + unicode(f.decode("utf-8")))
     return lof
 
 

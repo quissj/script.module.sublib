@@ -146,6 +146,8 @@ class model():
 
         # process file name
         fname = urllib.unquote(xbmc.Player().getPlayingFile().decode('utf-8'))
+        if "|" in fname:
+            fname = fname.split("|")[0]
         path = urlparse.urlparse(fname).path
         path = urllib.unquote_plus(path)
         if path.endswith("/"):
